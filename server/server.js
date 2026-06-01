@@ -14,8 +14,8 @@ const app = express();
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    // Allow any localhost origin (any port)
-    if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) {
+    // Allow any localhost or 127.0.0.1 origin (any port)
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
       return callback(null, true);
     }
     if (origin === process.env.CLIENT_URL) {

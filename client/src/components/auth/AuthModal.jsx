@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check } from "lucide-react";
+import { X, Check, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { setAuthModal } from "../../store/uiSlice";
 import { loginUser, registerUser, clearAuthError } from "../../store/authSlice";
@@ -18,12 +18,14 @@ const AuthModal = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [shake, setShake] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   // Clear errors when toggling modes
   useEffect(() => {
     dispatch(clearAuthError());
+    setShowPassword(false);
   }, [isLogin, dispatch]);
 
   // Shake modal on auth error
@@ -203,13 +205,30 @@ const AuthModal = () => {
                     <label className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
                       Password
                     </label>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="rounded-xl border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 focus-visible:ring-orange-500"
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="rounded-xl border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 focus-visible:ring-orange-500 pr-11"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        title={showPassword ? "Hide password" : "Show password"}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-orange-500 dark:text-stone-500 dark:hover:text-orange-400 transition-colors"
+                      >
+                        <motion.div
+                          key={showPassword ? "eye-off" : "eye"}
+                          initial={{ scale: 0.7, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                        </motion.div>
+                      </button>
+                    </div>
                   </div>
 
                   <Button

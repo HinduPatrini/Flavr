@@ -1,9 +1,8 @@
-const OpenAI = require("openai");
+const Groq = require("groq-sdk");
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // POST /api/ai/generate
-// Body: { ingredients: ["egg", "milk", "flour"] }
 const generateRecipe = async (req, res) => {
   try {
     const { ingredients } = req.body;
@@ -22,18 +21,16 @@ const generateRecipe = async (req, res) => {
       - Ingredients list with quantities
       - Step by step cooking instructions
       - A short description
-      Format the response as JSON.
+      Format the response as JSON only, no extra text.
     `;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+    const response = await groq.chat.completions.create({
+      model: "llama3-8b-8192",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });
 
     const text = response.choices[0].message.content;
-
-    // Strip markdown code blocks if present
     const clean = text.replace(/```json|```/g, "").trim();
     const recipe = JSON.parse(clean);
 
