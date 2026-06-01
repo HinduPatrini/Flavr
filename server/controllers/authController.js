@@ -127,7 +127,9 @@ const updateProfile = async (req, res) => {
       user.name = req.body.name;
     }
 
-    if (req.file) {
+    if (req.body.removeAvatar === "true" || req.body.removeAvatar === true) {
+      user.avatar = "";
+    } else if (req.file) {
       const fileStr = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
       try {
         if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {

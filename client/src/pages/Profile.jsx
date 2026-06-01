@@ -82,6 +82,18 @@ const Profile = () => {
     });
   };
 
+  const handleRemoveAvatar = () => {
+    const formData = new FormData();
+    formData.append("removeAvatar", "true");
+
+    const removePromise = dispatch(updateProfileThunk(formData)).unwrap();
+    toast.promise(removePromise, {
+      loading: "Removing avatar...",
+      success: "Avatar removed successfully!",
+      error: "Failed to remove avatar",
+    });
+  };
+
   const handleSaveName = () => {
     const trimmed = newName.trim();
     if (!trimmed) {
@@ -131,21 +143,35 @@ const Profile = () => {
 
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-6 pt-12">
           {/* Avatar Section */}
-          <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
-            <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white dark:border-stone-900 bg-stone-100 dark:bg-stone-800 shadow-lg">
+          <div className="relative group cursor-pointer">
+            {/* Avatar Circle Container */}
+            <div onClick={handleAvatarClick} className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-white dark:border-stone-900 bg-stone-100 dark:bg-stone-800 shadow-lg group">
               {user.avatar ? (
-                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover animate-fade-in" />
               ) : (
                 <div className="w-full h-full bg-orange-500 text-white flex items-center justify-center text-3xl font-black">
                   {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                 </div>
               )}
+              {/* Hover Camera icon overlay */}
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="w-6 h-6" />
+              </div>
             </div>
 
-            {/* Hover Camera icon overlay */}
-            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
-              <Camera className="w-6 h-6" />
-            </div>
+            {/* Remove Avatar Floating Button */}
+            {user.avatar && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveAvatar();
+                }}
+                className="absolute -top-1 -right-1 z-20 w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-md active:scale-95 transition-all border-2 border-white dark:border-stone-900 hover:scale-105"
+                title="Remove profile picture"
+              >
+                <X className="w-4 h-4 stroke-[3]" />
+              </button>
+            )}
 
             <input
               type="file"

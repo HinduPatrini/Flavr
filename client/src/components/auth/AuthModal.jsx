@@ -190,34 +190,51 @@ const AuthModal = () => {
                     <div className="space-y-4">
                       {/* Avatar Upload */}
                       <div className="flex flex-col items-center justify-center space-y-2 pb-2">
-                        <div className="relative group cursor-pointer w-20 h-20 rounded-full border-2 border-dashed border-orange-300 dark:border-stone-700 hover:border-orange-500 dark:hover:border-orange-400 overflow-hidden flex items-center justify-center transition-all bg-white dark:bg-stone-955 shadow-inner">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                setAvatarFile(file);
-                                setAvatarPreview(URL.createObjectURL(file));
-                              }
-                            }}
-                            className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
-                          />
-                          {avatarPreview ? (
-                            <img
-                              src={avatarPreview}
-                              alt="Avatar preview"
-                              className="w-full h-full object-cover"
+                        <div className="relative w-20 h-20">
+                          <div className="relative group cursor-pointer w-full h-full rounded-full border-2 border-dashed border-orange-300 dark:border-stone-700 hover:border-orange-500 dark:hover:border-orange-400 overflow-hidden flex items-center justify-center transition-all bg-white dark:bg-stone-955 shadow-inner">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  setAvatarFile(file);
+                                  setAvatarPreview(URL.createObjectURL(file));
+                                }
+                              }}
+                              className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
                             />
-                          ) : (
-                            <div className="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors">
-                              <Camera className="w-6 h-6 stroke-[1.5]" />
-                              <span className="text-[9px] font-bold mt-1 tracking-tight">Upload</span>
+                            {avatarPreview ? (
+                              <img
+                                src={avatarPreview}
+                                alt="Avatar preview"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors">
+                                <Camera className="w-6 h-6 stroke-[1.5]" />
+                                <span className="text-[9px] font-bold mt-1 tracking-tight">Upload</span>
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white z-20 pointer-events-none">
+                              <Camera className="w-5 h-5" />
                             </div>
-                          )}
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white z-20 pointer-events-none">
-                            <Camera className="w-5 h-5" />
                           </div>
+
+                          {avatarPreview && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAvatarFile(null);
+                                setAvatarPreview(null);
+                              }}
+                              className="absolute -top-1 -right-1 z-30 w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-md active:scale-95 transition-all border-2 border-orange-50 dark:border-stone-900"
+                              title="Clear photo"
+                            >
+                              <X className="w-3.5 h-3.5 stroke-[3]" />
+                            </button>
+                          )}
                         </div>
                         <span className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
                           Profile Photo (Optional)
