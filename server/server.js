@@ -14,15 +14,23 @@ const app = express();
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    // Allow any localhost or 127.0.0.1 origin on any port
+    // Allow any localhost or 127.0.0.1 (dev)
     if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
       return callback(null, true);
     }
-    // Allow deployed CLIENT_URL (exact match or wildcard subdomain)
+    // Allow any Vercel deployment URL
+    if (/^https:\/\/[\w-]+\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+    // Allow any Render deployment URL
+    if (/^https:\/\/[\w-]+\.onrender\.com$/.test(origin)) {
+      return callback(null, true);
+    }
+    // Allow explicit CLIENT_URL from env
     if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) {
       return callback(null, true);
     }
-    console.warn("CORS blocked origin:", origin, "| Expected CLIENT_URL:", process.env.CLIENT_URL);
+    console.warn("CORS blocked origin:", origin);
     return callback(new Error("Not allowed by CORS"), false);
   },
   credentials: true
