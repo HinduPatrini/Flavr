@@ -1,6 +1,5 @@
 const dotenv = require("dotenv");
 dotenv.config();                    // ← must be first
-console.log("GOOGLE_CLIENT_ID in server.js:", process.env.GOOGLE_CLIENT_ID);
 
 const express = require("express");
 const cors = require("cors");
@@ -14,16 +13,16 @@ const app = express();
 
 app.use(cors({
   origin: function (origin, callback) {
-    console.log("CORS Check for Origin:", origin);
     if (!origin) return callback(null, true);
-    // Allow any localhost or 127.0.0.1 origin (any port)
+    // Allow any localhost or 127.0.0.1 origin on any port
     if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
       return callback(null, true);
     }
-    if (origin === process.env.CLIENT_URL) {
+    // Allow deployed CLIENT_URL (exact match or wildcard subdomain)
+    if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) {
       return callback(null, true);
     }
-    console.error("CORS BLOCKED for origin:", origin);
+    console.warn("CORS blocked origin:", origin, "| Expected CLIENT_URL:", process.env.CLIENT_URL);
     return callback(new Error("Not allowed by CORS"), false);
   },
   credentials: true
