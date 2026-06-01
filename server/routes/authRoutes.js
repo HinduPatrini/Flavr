@@ -20,17 +20,21 @@ router.get(
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", {
-    session: false,
-    failureRedirect: `${process.env.CLIENT_URL}/login?error=google_failed`,
-  }),
+  (req, res, next) => {
+    const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
+    passport.authenticate("google", {
+      session: false,
+      failureRedirect: `${clientUrl}/login?error=google_failed`,
+    })(req, res, next);
+  },
   (req, res) => {
+    const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
     const token = jwt.sign(
       { id: req.user._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-    res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
+    res.redirect(`${clientUrl}/auth/callback?token=${token}`);
   }
 );
 

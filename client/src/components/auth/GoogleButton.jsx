@@ -4,9 +4,10 @@ import { motion } from "framer-motion";
 
 const GoogleButton = () => {
   const handleGoogleLogin = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
-    // Redirect browser to the backend Google OAuth flow
-    window.location.href = `${apiUrl}/api/auth/google`;
+    const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    // Strip any trailing /api or trailing slash so we always append /api/auth/google exactly once
+    const cleanBase = rawUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
+    window.location.href = `${cleanBase}/api/auth/google`;
   };
 
   return (
