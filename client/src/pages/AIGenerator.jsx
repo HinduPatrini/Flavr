@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
-import { BrainCircuit, Sparkles, Plus, X, Clock, Users, ArrowRight, Save, Heart, Eye, Trash2 } from "lucide-react";
+import { BrainCircuit, Sparkles, Plus, X, Clock, Users, ArrowRight, Save, Heart, Eye, Trash2, MessageSquare, Star } from "lucide-react";
 import toast from "react-hot-toast";
 import API from "../api/axios";
 import { Button } from "../components/ui/button";
+import StarRating from "../components/shared/StarRating";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 
 const AIGenerator = () => {
-  const { token } = useSelector((state) => state.auth);
+  const { token, user } = useSelector((state) => state.auth);
 
   const [ingredientInput, setIngredientInput] = useState("");
   const [ingredients, setIngredients] = useState(["egg", "milk", "flour"]);
@@ -15,6 +17,11 @@ const AIGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [savedAiRecipes, setSavedAiRecipes] = useState([]);
   const [showSavedList, setShowSavedList] = useState(false);
+
+  // Review states
+  const [reviews, setReviews] = useState([]);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
 
   // Load saved AI recipes from localStorage on mount
   useEffect(() => {
@@ -27,6 +34,26 @@ const AIGenerator = () => {
       }
     }
   }, []);
+
+  // Sync reviews when the active recipe changes
+  useEffect(() => {
+    if (recipe) {
+      const allReviews = localStorage.getItem("aiRecipeReviews");
+      if (allReviews) {
+        try {
+          const parsed = JSON.parse(allReviews);
+          setReviews(parsed[recipe.name] || []);
+        } catch (err) {
+          console.error("Failed to parse AI reviews:", err);
+          setReviews([]);
+        }
+      } else {
+        setReviews([]);
+      }
+    } else {
+      setReviews([]);
+    }
+  }, [recipe]);
 
   const handleAddIngredient = (e) => {
     e.preventDefault();
@@ -90,6 +117,59 @@ const AIGenerator = () => {
     toast.success("Recipe removed");
   };
 
+  // Add review submission handler
+  const handleReviewSubmit = (e) => {
+    e.preventDefault();
+    if (!comment.trim()) {
+      toast.error("Please enter a comment");
+      return;
+    }
+
+    const newReview = {
+      id: Date.now().toString(),
+      userName: user?.name || "Flavr Chef",
+      userAvatar: user?.avatar || "",
+      rating,
+      comment: comment.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    const allReviews = localStorage.getItem("aiRecipeReviews") || "{}";
+    let parsed = {};
+    try {
+      parsed = JSON.parse(allReviews);
+    } catch (err) {
+      parsed = {};
+    }
+
+    const updatedList = [newReview, ...(parsed[recipe.name] || [])];
+    parsed[recipe.name] = updatedList;
+
+    localStorage.setItem("aiRecipeReviews", JSON.stringify(parsed));
+    setReviews(updatedList);
+    setComment("");
+    setRating(5);
+    toast.success("Review submitted!");
+  };
+
+  // Delete review handler
+  const handleReviewDelete = (reviewId) => {
+    const allReviews = localStorage.getItem("aiRecipeReviews") || "{}";
+    let parsed = {};
+    try {
+      parsed = JSON.parse(allReviews);
+    } catch (err) {
+      parsed = {};
+    }
+
+    const updatedList = (parsed[recipe.name] || []).filter((r) => r.id !== reviewId);
+    parsed[recipe.name] = updatedList;
+
+    localStorage.setItem("aiRecipeReviews", JSON.stringify(parsed));
+    setReviews(updatedList);
+    toast.success("Review deleted");
+  };
+
   // If not authenticated, render blurred placeholder (handled globally)
   if (!token) {
     return (
@@ -98,6 +178,11 @@ const AIGenerator = () => {
       </div>
     );
   }
+
+  // Calculate average rating
+  const avgRating = reviews.length > 0 
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    : "0.0";
 
   return (
     <motion.div
@@ -139,7 +224,7 @@ const AIGenerator = () => {
                 <Sparkles className="w-4.5 h-4.5 text-orange-500 fill-orange-500/10" />
                 <span>Enter Ingredients</span>
               </h3>
-              <p className="text-xs font-semibold text-stone-400 dark:text-stone-500">
+              <p className="text-xs font-semibold text-stone-450 dark:text-stone-500">
                 Type an item (e.g. Tomato, Salmon) and press Add or Enter.
               </p>
             </div>
@@ -374,6 +459,94 @@ const AIGenerator = () => {
                         </li>
                       ))}
                     </ol>
+                  </div>
+
+                  {/* Review Section for AI Recipes */}
+                  <div className="border-t border-stone-100 dark:border-stone-850 pt-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-base font-black text-stone-850 dark:text-white flex items-center gap-2">
+                        <MessageSquare className="w-4.5 h-4.5 text-orange-500" />
+                        <span>Recipe Reviews &amp; Notes ({reviews.length})</span>
+                      </h4>
+                      {reviews.length > 0 && (
+                        <div className="flex items-center gap-1 bg-orange-50 dark:bg-stone-855 px-2.5 py-1 rounded-xl text-orange-600 dark:text-orange-400 font-extrabold text-xs">
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          <span>{avgRating} Avg</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Add Review Form */}
+                    <form onSubmit={handleReviewSubmit} className="space-y-4 bg-orange-50/20 dark:bg-stone-950/20 p-5 rounded-2xl border border-orange-100/50 dark:border-stone-850/60">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-stone-500 dark:text-stone-400">Your Rating:</span>
+                        <StarRating rating={rating} onChange={setRating} interactive={true} size={20} />
+                      </div>
+                      
+                      <textarea
+                        placeholder="Add cooking notes, variations, or rate your experience with this AI chef recipe..."
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        rows={3}
+                        className="w-full p-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-sm font-semibold text-stone-700 dark:text-stone-250 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 placeholder-stone-400 dark:placeholder-stone-500 resize-none shadow-inner"
+                      />
+
+                      <Button
+                        type="submit"
+                        className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold h-10 shadow-sm"
+                      >
+                        Submit Review / Note
+                      </Button>
+                    </form>
+
+                    {/* Reviews List */}
+                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
+                      {reviews.length === 0 ? (
+                        <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 text-center py-4">
+                          No reviews yet. Be the first to leave a review or note!
+                        </p>
+                      ) : (
+                        <AnimatePresence>
+                          {reviews.map((rev) => (
+                            <motion.div
+                              key={rev.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="space-y-2 border-b border-stone-50 dark:border-stone-850/60 last:border-b-0 pb-3"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="w-7 h-7">
+                                    <AvatarImage src={rev.userAvatar} alt={rev.userName} />
+                                    <AvatarFallback className="bg-orange-100 text-orange-600 font-extrabold text-[10px]">
+                                      {rev.userName ? rev.userName.charAt(0).toUpperCase() : "U"}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-xs font-bold text-stone-800 dark:text-stone-200">
+                                    {rev.userName}
+                                  </span>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <StarRating rating={rev.rating} size={11} />
+                                  <button
+                                    onClick={() => handleReviewDelete(rev.id)}
+                                    className="text-stone-400 hover:text-red-500 p-0.5 transition-colors ml-1"
+                                    title="Delete Note"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                              <p className="text-xs font-semibold text-stone-500 dark:text-stone-400 leading-relaxed pl-9">
+                                {rev.comment}
+                              </p>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               )}
