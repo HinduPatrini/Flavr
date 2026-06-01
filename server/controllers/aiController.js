@@ -1,19 +1,21 @@
-const Groq = require("groq-sdk");
+const OpenAI = require("openai");
 
-// Lazily initialize so a missing GROQ_API_KEY doesn't crash server on boot
-let groq = null;
-if (process.env.GROQ_API_KEY) {
-  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  console.log("✅ Groq AI client initialized.");
+// Lazily initialize so a missing OPENAI_API_KEY doesn't crash server on boot
+let openai = null;
+if (process.env.OPENAI_API_KEY) {
+  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  console.log("✅ OpenAI client initialized.");
 } else {
-  console.warn("⚠️  GROQ_API_KEY missing — AI recipe generation disabled.");
+  console.warn("⚠️  OPENAI_API_KEY missing — AI recipe generation disabled.");
 }
 
 // POST /api/ai/generate
 const generateRecipe = async (req, res) => {
   try {
-    if (!groq) {
-      return res.status(503).json({ message: "AI service is not configured. Please add GROQ_API_KEY to your environment variables." });
+    if (!openai) {
+      return res.status(503).json({
+        message: "AI service is not configured. Please add OPENAI_API_KEY to your environment variables.",
+      });
     }
 
     const { ingredients } = req.body;
@@ -47,15 +49,16 @@ const generateRecipe = async (req, res) => {
       }
     `;
 
-    const response = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
+      max_tokens: 1200,
     });
 
     const text = response.choices[0].message.content;
     let clean = text.replace(/```json|```/g, "").trim();
-    
+
     let recipe;
     try {
       recipe = JSON.parse(clean);
@@ -75,6 +78,7 @@ const generateRecipe = async (req, res) => {
 
     res.json({ recipe });
   } catch (error) {
+    console.error("AI generate error:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
