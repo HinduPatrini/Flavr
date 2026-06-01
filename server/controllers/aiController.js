@@ -1,10 +1,21 @@
 const Groq = require("groq-sdk");
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Lazily initialize so a missing GROQ_API_KEY doesn't crash server on boot
+let groq = null;
+if (process.env.GROQ_API_KEY) {
+  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  console.log("✅ Groq AI client initialized.");
+} else {
+  console.warn("⚠️  GROQ_API_KEY missing — AI recipe generation disabled.");
+}
 
 // POST /api/ai/generate
 const generateRecipe = async (req, res) => {
   try {
+    if (!groq) {
+      return res.status(503).json({ message: "AI service is not configured. Please add GROQ_API_KEY to your environment variables." });
+    }
+
     const { ingredients } = req.body;
 
     if (!ingredients || ingredients.length === 0)
