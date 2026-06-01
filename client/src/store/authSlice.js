@@ -6,7 +6,9 @@ export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await API.post("/auth/register", userData);
+      const isFormData = userData instanceof FormData;
+      const headers = isFormData ? { "Content-Type": "multipart/form-data" } : {};
+      const response = await API.post("/auth/register", userData, { headers });
       localStorage.setItem("token", response.data.token);
       return response.data;
     } catch (error) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Eye, EyeOff } from "lucide-react";
+import { X, Check, Eye, EyeOff, Camera, User } from "lucide-react";
 import toast from "react-hot-toast";
 import { setAuthModal } from "../../store/uiSlice";
 import { loginUser, registerUser, clearAuthError } from "../../store/authSlice";
@@ -21,11 +21,15 @@ const AuthModal = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [shake, setShake] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
 
-  // Clear errors when toggling modes
+  // Clear errors and avatar when toggling modes
   useEffect(() => {
     dispatch(clearAuthError());
     setShowPassword(false);
+    setAvatarFile(null);
+    setAvatarPreview(null);
   }, [isLogin, dispatch]);
 
   // Shake modal on auth error
@@ -49,6 +53,8 @@ const AuthModal = () => {
         setName("");
         setEmail("");
         setPassword("");
+        setAvatarFile(null);
+        setAvatarPreview(null);
       }, 1000);
       return () => clearTimeout(timer);
     }
@@ -73,7 +79,14 @@ const AuthModal = () => {
     if (isLogin) {
       dispatch(loginUser({ email, password }));
     } else {
-      dispatch(registerUser({ name, email, password }));
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("password", password);
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+      dispatch(registerUser(formData));
     }
   };
 
@@ -174,17 +187,55 @@ const AuthModal = () => {
                 {/* Credentials Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {!isLogin && (
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-                        Name
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="John Doe"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="rounded-xl border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 focus-visible:ring-orange-500"
-                      />
+                    <div className="space-y-4">
+                      {/* Avatar Upload */}
+                      <div className="flex flex-col items-center justify-center space-y-2 pb-2">
+                        <div className="relative group cursor-pointer w-20 h-20 rounded-full border-2 border-dashed border-orange-300 dark:border-stone-700 hover:border-orange-500 dark:hover:border-orange-400 overflow-hidden flex items-center justify-center transition-all bg-white dark:bg-stone-955 shadow-inner">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                setAvatarFile(file);
+                                setAvatarPreview(URL.createObjectURL(file));
+                              }
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
+                          />
+                          {avatarPreview ? (
+                            <img
+                              src={avatarPreview}
+                              alt="Avatar preview"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors">
+                              <Camera className="w-6 h-6 stroke-[1.5]" />
+                              <span className="text-[9px] font-bold mt-1 tracking-tight">Upload</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white z-20 pointer-events-none">
+                            <Camera className="w-5 h-5" />
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
+                          Profile Photo (Optional)
+                        </span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                          Name
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="John Doe"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="rounded-xl border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 focus-visible:ring-orange-500"
+                        />
+                      </div>
                     </div>
                   )}
 

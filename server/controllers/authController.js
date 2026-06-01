@@ -1,6 +1,14 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -25,10 +33,24 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    let avatarUrl = "";
+    if (req.file) {
+      try {
+        const fileStr = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+        const uploadResponse = await cloudinary.uploader.upload(fileStr, {
+          folder: "flavr_avatars",
+        });
+        avatarUrl = uploadResponse.secure_url;
+      } catch (uploadErr) {
+        console.error("Cloudinary register upload error:", uploadErr.message);
+      }
+    }
+
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
+      avatar: avatarUrl,
     });
 
     res.status(201).json({
@@ -88,13 +110,7 @@ const getMe = async (req, res) => {
   }
 };
 
-const cloudinary = require("cloudinary").v2;
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 const updateProfile = async (req, res) => {
   try {

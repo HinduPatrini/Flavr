@@ -8,7 +8,7 @@ const { protect } = require("../middleware/authMiddleware");
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post("/register", register);
+router.post("/register", upload.single("avatar"), register);
 router.post("/login", login);
 router.get("/me", protect, getMe);
 router.put("/profile", protect, upload.single("avatar"), updateProfile);
