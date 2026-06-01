@@ -21,14 +21,14 @@ router.get(
 router.get(
   "/google/callback",
   (req, res, next) => {
-    const clientUrl = (process.env.CLIENT_URL || "https://flavr-seven.vercel.app").replace(/\/$/, "");
+    const clientUrl = (process.env.CLIENT_URL || "https://flavr-seven.vercel.app").trim().replace(/\/$/, "");
     passport.authenticate("google", {
       session: false,
       failureRedirect: `${clientUrl}/login?error=google_failed`,
     })(req, res, next);
   },
   (req, res) => {
-    const clientUrl = (process.env.CLIENT_URL || "https://flavr-seven.vercel.app").replace(/\/$/, "");
+    const clientUrl = (process.env.CLIENT_URL || "https://flavr-seven.vercel.app").trim().replace(/\/$/, "");
     const token = jwt.sign(
       { id: req.user._id },
       process.env.JWT_SECRET,
