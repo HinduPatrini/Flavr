@@ -22,19 +22,19 @@ Built as a portfolio project to demonstrate full-stack development skills using 
 ## 📸 Screenshots
 
 ### Home Page
-![Home Page](./assets/ss1.png)
+![Home Page](client/src/assets/ss1.png)
 > Hero section with search bar, featured recipes, and category filters
 
 ### Recipe Detail
-![Recipe Detail](./assets/ss2.png)
+![Recipe Detail](client/src/assets/ss2.png)
 > Full recipe details with ingredients, preparation steps, nutrition facts, and reviews
 
 ### Weekly Meal Planner
-![Meal Planner](./assets/ss3.png)
+![Meal Planner](client/src/assets/ss3.png)
 > Plan your weekly meals with breakfast, lunch, and dinner slots for every day
 
 ### Filters & Sidebar
-![Filters and Sidebar](./assets/ss4.png)
+![Filters and Sidebar](client/src/assets/ss4.png)
 > Mobile sidebar navigation and advanced recipe filters
 
 ---
