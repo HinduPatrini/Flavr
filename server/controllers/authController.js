@@ -35,14 +35,18 @@ const register = async (req, res) => {
 
     let avatarUrl = "";
     if (req.file) {
+      const fileStr = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
       try {
-        const fileStr = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
+          throw new Error("Cloudinary credentials not configured");
+        }
         const uploadResponse = await cloudinary.uploader.upload(fileStr, {
           folder: "flavr_avatars",
         });
         avatarUrl = uploadResponse.secure_url;
       } catch (uploadErr) {
-        console.error("Cloudinary register upload error:", uploadErr.message);
+        console.warn("⚠️ Cloudinary upload failed, falling back to base64 Data URL storage:", uploadErr.message);
+        avatarUrl = fileStr;
       }
     }
 
@@ -125,10 +129,18 @@ const updateProfile = async (req, res) => {
 
     if (req.file) {
       const fileStr = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
-      const uploadResponse = await cloudinary.uploader.upload(fileStr, {
-        folder: "flavr_avatars",
-      });
-      user.avatar = uploadResponse.secure_url;
+      try {
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
+          throw new Error("Cloudinary credentials not configured");
+        }
+        const uploadResponse = await cloudinary.uploader.upload(fileStr, {
+          folder: "flavr_avatars",
+        });
+        user.avatar = uploadResponse.secure_url;
+      } catch (uploadErr) {
+        console.warn("⚠️ Cloudinary upload failed, falling back to base64 Data URL storage:", uploadErr.message);
+        user.avatar = fileStr;
+      }
     }
 
     await user.save();
